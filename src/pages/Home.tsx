@@ -37,7 +37,7 @@ const Home = () => {
 
     const filterSearch = (value: string) => {
         if (value !== "") {
-            const filteredUsersArray = users?.filter(user =>
+            const filteredUsersArray = usersData?.filter(user =>
                 user.email.toLowerCase().includes(value) ||
                 user.first_name.toLowerCase().includes(value) ||
                 user.last_name.toLowerCase().includes(value)
@@ -60,27 +60,30 @@ const Home = () => {
     };
 
     const onSelectChange = (sort: string) => {
-        const storedUserJson = localStorage.getItem('userData');
-        if (storedUserJson)
-            setUserData(JSON.parse(storedUserJson))
-        if (sort == "0") {
-            return
+        let sortedData = [...usersData];
+        switch (sort) {
+            case "0": {
+                const storedUserJson = localStorage.getItem('userData');
+                if (storedUserJson) {
+                    const originalUser: Users[] = JSON.parse(storedUserJson)
+                    sortedData = [...originalUser];
+                }
+                break
+            }
+            case "1":
+                sortedData.sort((a, b) => a.first_name.localeCompare(b.first_name));
+                break;
+            case "2":
+                sortedData.sort((a, b) => a.last_name.localeCompare(b.last_name));
+                break;
+            case "3":
+                sortedData.sort((a, b) => a.email.localeCompare(b.email));
+                break;
+            default:
+                break;
         }
-        if (sort == "1") {
-            const sortedData = usersData.sort((a, b) => a.first_name.localeCompare(b.first_name));
-            setUserData(sortedData);
-            return;
-        }
-        if (sort == "2") {
-            const sortedData = usersData.sort((a, b) => a.last_name.localeCompare(b.last_name));
-            setUserData(sortedData);
-            return
-        }
-        if (sort == "3") {
-            const sortedData = usersData.sort((a, b) => a.email.localeCompare(b.email));
-            setUserData(sortedData);
-            return;
-        }
+        console.log(sortedData);
+        setUserData(sortedData);
     }
 
     const handleAddData = (data: Users) => {
@@ -96,25 +99,18 @@ const Home = () => {
     };
 
     const deleteUser = (email: string) => {
-        // Retrieve existing data from local storage
         const storedDataJson = localStorage.getItem('userData');
         let storedData: Users[] = [];
 
         if (storedDataJson) {
             storedData = JSON.parse(storedDataJson);
         }
-
-        // Find the index of the item to be deleted
         const indexToDelete = storedData.findIndex((item) => item.email === email);
 
         if (indexToDelete !== -1) {
-            // Remove the item from the data array
             storedData.splice(indexToDelete, 1);
-
-            // Update local storage with the modified data
             const updatedDataJson = JSON.stringify(storedData);
             localStorage.setItem('userData', updatedDataJson);
-
             const storedUserJson = localStorage.getItem('userData');
             setUserData([])
             if (storedUserJson)
@@ -133,7 +129,10 @@ const Home = () => {
                 <div className="w-full lg:w-2/6 ">
                     <div className="bg-[#3F51B5]  px-4 py-2">
                         <div className="flex justify-between items-center">
-                            <select className="bg-inherit text-white outline-none border-none py-4" onChange={(e) => onSelectChange(e.target.value)}>
+                            <select className="bg-inherit text-white outline-none border-none py-4" onChange={(e) => {
+                                // saveDataToLocalStorage()
+                                onSelectChange(e.target.value);
+                            }}>
                                 <option value="0" className="text-black">ALL</option>
                                 <option value="1" className="text-black">First Name</option>
                                 <option value="2" className="text-black">Last Name</option>
@@ -145,7 +144,7 @@ const Home = () => {
                     </div>
                     <h2 className="text-center text-2xl font-medium mt-4">User List</h2>
                     <div className="px-4">
-                        {(isSearch) ? (searchString) ? filteredUsers?.map(user => userData(user)) : usersData?.map(user => userData(user)) : usersData?.map(user => userData(user))}
+                        {(isSearch) ? (searchString) ? filteredUsers?.map(user => userDataCard(user)) : usersData?.map(user => userDataCard(user)) : usersData?.map(user => userDataCard(user))}
                     </div>
 
                 </div>
@@ -172,7 +171,7 @@ const Home = () => {
             )}
         </div>
     )
-    function userData(data: Users) {
+    function userDataCard(data: Users) {
         return (<div key={data.email} className="flex my-4 items-center cursor-pointer border-b-2 pb-2 transition-all duration-300 border-b-transparent hover:border-b-2 hover:border-b-gray-500" >
             <div className="flex flex-1" onClick={() => {
                 openModal();
